@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 class MyCanvasPainter extends CustomPainter {
   final List<Component> objects;
-
-  MyCanvasPainter(this.objects);
+  final Component? selectedObject;
+  MyCanvasPainter(this.objects, this.selectedObject);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -31,7 +31,42 @@ class MyCanvasPainter extends CustomPainter {
 
     // Draw your components after the dots
     for (final object in objects) {
+       canvas.save();
+
+        final center = Offset(
+          object.x+50,
+          object.y,
+        );
+       canvas.translate(
+        center.dx,
+        center.dy,
+      );
+      canvas.rotate(
+      object.rotation,
+      );
+      canvas.translate(
+      -center.dx,
+      -center.dy,
+    );
+    if (object == selectedObject) {
+
+        final selectionPaint = Paint()
+          ..color = Colors.white.withAlpha(150)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1;
+
+              final selectionBox = RRect.fromRectAndRadius(
+        object.hitbox.inflate(1),
+        const Radius.circular(2),
+      );
+
+      canvas.drawRRect(
+        selectionBox,
+        selectionPaint,
+      );
+      }
      if(object.type==2){
+
       drawCurrentSource(canvas, Offset(object.x, object.y), paintComp);
      }
      else if(object.type==1)
@@ -41,9 +76,12 @@ class MyCanvasPainter extends CustomPainter {
      else
      {
       drawResistor(canvas, Offset(object.x, object.y), paintComp);
+      
      }
-
+    canvas.restore();
     }
+    
+   
   }
     void drawCurrentSource(
     Canvas canvas,
@@ -181,7 +219,7 @@ class MyCanvasPainter extends CustomPainter {
   Paint paint,
 ) {
   const double leadLength = 25;
-  const double bodyWidth = 55;
+  const double bodyWidth = 50;
   const double bodyHeight = 35;
   const double terminalRadius = 5;
 
@@ -320,7 +358,7 @@ final terminalPaintHole = Paint()
           Paint paint,
         ) {
           const double leadLength = 25;
-          const double bodyWidth = 60;
+          const double bodyWidth = 50;
           const double bodyHeight = 20;
           const double terminalRadius = 5;
 
@@ -372,7 +410,6 @@ final terminalPaintHole = Paint()
           final bodyPaint = Paint()
             ..color = const Color(0xFFD6B27C)
             ..style = PaintingStyle.fill;
-
           canvas.drawRRect(
             bodyRect,
             bodyPaint,
@@ -392,10 +429,10 @@ final terminalPaintHole = Paint()
           ];
 
           final bandPositions = [
-            x + leadLength + 12,
-            x + leadLength + 25,
+            x + leadLength + 6,
+            x + leadLength + 16,
+            x + leadLength + 26,
             x + leadLength + 38,
-            x + leadLength + 50,
           ];
 
           for (int i = 0; i < bands.length; i++) {

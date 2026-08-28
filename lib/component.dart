@@ -6,7 +6,6 @@ class Component{
   int type;
   double x;
   double y;
-  double width = 55;
    double rotation;
 
   Component({
@@ -17,9 +16,9 @@ class Component{
   });
   Rect get hitbox {
     return Rect.fromCenter(
-      center: Offset(x+width, y),
-      width: 55,
-      height: 55,
+      center: Offset( x+50,y),
+      width: 50,
+      height: 50,
     );
   }
   bool contains(Offset position) {

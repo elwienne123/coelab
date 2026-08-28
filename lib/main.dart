@@ -55,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         elevation: 4.0,     
          shadowColor: const Color.fromARGB(255, 17,17,17), 
-        backgroundColor: const Color.fromARGB(255, 17,17,17),
+        backgroundColor: const Color.fromARGB(255, 30,30,30),
         title: Text(widget.title,style: const TextStyle(color: Color.fromARGB(255, 215, 215, 215), fontWeight: FontWeight.bold,fontSize: 20),),
       ),
       body: SafeArea(child: Home()),
