@@ -78,6 +78,10 @@ class MyCanvasPainter extends CustomPainter {
       drawResistor(canvas, Offset(object.x, object.y), paintComp);
       
      }
+      drawComponentLabel(
+  canvas,
+  object,
+);
     canvas.restore();
     }
     
@@ -495,6 +499,165 @@ final terminalPaintHole = Paint()
 
 
         }
+  String getComponentValue(Component object) {
+
+  if (object.type == 0) {
+    return '${object.resistance} Ω';
+  }
+
+  if (object.type == 1) {
+    return '${object.voltage} V';
+  }
+
+  return '${object.current} A';
+}
+
+
+void drawComponentLabel(
+  Canvas canvas,
+  Component object,
+) {
+  final namePainter = TextPainter(
+    text: TextSpan(
+      text: object.name,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    textDirection: TextDirection.ltr,
+  );
+
+  final valuePainter = TextPainter(
+    text: TextSpan(
+      text: getComponentValue(object),
+      style: const TextStyle(
+        color: Colors.white70,
+        fontSize:14,
+      ),
+    ),
+    textDirection: TextDirection.ltr,
+  );
+
+  namePainter.layout();
+  valuePainter.layout();
+
+  final center = Offset(
+    object.x + 50,
+    object.y,
+  );
+
+  final pi = 3.14159265359;
+
+  // Normalize rotation between 0 and 2π
+  double rotation =
+      object.rotation % (2 * pi);
+
+  if (rotation < 0) {
+    rotation += 2 * pi;
+  }
+
+  // Determine whether the component is vertical.
+  final bool isVertical =
+      (rotation - pi / 2).abs() < pi / 4 ||
+      (rotation - 3 * pi / 2).abs() < pi / 4;
+
+  double nameX;
+  double nameY;
+
+  double valueX;
+  double valueY;
+
+  if (!isVertical) {
+
+    // =========================
+    // HORIZONTAL
+    // =========================
+
+    nameX =
+        center.dx -
+        namePainter.width / 2;
+
+    nameY =
+        center.dy -
+        60;
+
+    valueX =
+        center.dx -
+        valuePainter.width / 2;
+
+    valueY =
+        nameY +
+        namePainter.height +
+        2;
+
+  } else {
+
+    // =========================
+    // VERTICAL
+    // =========================
+
+    final totalHeight =
+        namePainter.height +
+        valuePainter.height +
+        2;
+
+    nameX =
+        center.dx -
+        30 -
+        namePainter.width;
+
+    nameY =
+        center.dy -
+        totalHeight / 2;
+
+    valueX =
+        center.dx -
+        30 -
+        valuePainter.width;
+
+    valueY =
+        nameY +
+        namePainter.height +
+        2;
+  }
+
+  canvas.save();
+
+  // Keep the label readable regardless
+  // of the component's rotation.
+  canvas.translate(
+    center.dx,
+    center.dy,
+  );
+
+  canvas.rotate(
+    -object.rotation,
+  );
+
+  canvas.translate(
+    -center.dx,
+    -center.dy,
+  );
+
+  // Draw component name
+  namePainter.paint(
+    canvas,
+    Offset(nameX, nameY),
+  );
+
+  // Draw component value
+  valuePainter.paint(
+    canvas,
+    Offset(valueX, valueY),
+  );
+
+  canvas.restore();
+}
+
+
+
   @override
   bool shouldRepaint(covariant MyCanvasPainter oldDelegate) {
     return oldDelegate.objects != objects;

@@ -11,9 +11,12 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   late AnimationController rotationController;
-  final ValueNotifier<bool> isRotating =
-    ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRotating = ValueNotifier<bool>(false);
     static const double gridSize = 25.0;
+    
+    final ValueNotifier<bool> showEditPanel =ValueNotifier<bool>(false);
+    
+    final TextEditingController editValueController = TextEditingController();
     final TransformationController transformationController =TransformationController();
   @override
   initState() {
@@ -23,20 +26,37 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
     duration: const Duration(milliseconds: 500),
   );
   }
+
+  @override
+void dispose() {
+  editValueController.dispose();
+  rotationController.dispose();
+  super.dispose();
+}
   final ValueNotifier<List<Component>> objectsNotifier =ValueNotifier<List<Component>>([]);
   final ValueNotifier<bool> valueListenable = ValueNotifier<bool>(true);
   Component? selectedObject;
   Offset? lastPointerPosition;
+  Component? connectionStartObject;
+int? connectionStartTerminal;
   
 
 
   void addObject(Component object) {
-  
- final position = getTopCenterOfCanvas();
+
+  final position = getTopCenterOfCanvas();
+
+  final snappedX =
+      (position.dx / gridSize).round() * gridSize;
+
+  final snappedY =
+      (position.dy / gridSize).round() * gridSize;
+
   final newObject = Component(
-    x: position.dx,
-    y: position.dy,
-    type:object.type
+    x: snappedX,
+    y: snappedY,
+    type: object.type,
+    name: generateComponentName(object.type),
   );
 
   objectsNotifier.value = [
@@ -45,15 +65,37 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
   ];
 
 }
+String generateComponentName(int type) {
+
+  String prefix;
+
+  if (type == 0) {
+    prefix = 'R';
+  } else if (type == 1) {
+    prefix = 'V';
+  } else {
+    prefix = 'I';
+  }
+
+  int number = 1;
+
+  while (objectsNotifier.value.any(
+    (object) => object.name == '$prefix$number',
+  )) {
+    number++;
+  }
+
+  return '$prefix$number';
+}
 
 void selectObject(Offset position) {
 
     selectedObject = null;
-
+     showEditPanel.value = false;
     for (final object in objectsNotifier.value.reversed) {
 
       if (object.contains(position)) {
-        selectedObject = object; // Disable scaling and panning
+        selectedObject = object;
         valueListenable.value = false;
         break;
       }else{
@@ -104,7 +146,19 @@ void selectObject(Offset position) {
     ...objectsNotifier.value,
   ];
 }
+void deleteSelectedObject() {
+  if (selectedObject == null) return;
 
+  final objectToDelete = selectedObject;
+
+  objectsNotifier.value = objectsNotifier.value
+      .where((object) => object != objectToDelete)
+      .toList();
+
+  selectedObject = null;
+
+  valueListenable.value = true;
+}
   void rotateSelectedObject() async {
   if (selectedObject == null || isRotating.value) return;
 
@@ -168,8 +222,262 @@ Offset getTopCenterOfCanvas() {
 
   return canvasPoint;
 }
+
+
+void editSelectedObject() {
+
+  if (selectedObject == null) return;
+
+  final object = selectedObject!;
+
+  if (object.type == 0) {
+    editValueController.text =
+        object.resistance.toString();
+  }
+  else if (object.type == 1) {
+    editValueController.text =
+        object.voltage.toString();
+  }
+  else {
+    editValueController.text =
+        object.current.toString();
+  }
+
+  showEditPanel.value = true;
+}
+
+  
+Widget _buildEditPanel() {
+
+  if (selectedObject == null) {
+    return const SizedBox();
+  }
+
+  final object = selectedObject!;
+
+  String title;
+  String label;
+  String unit;
+
+  if (object.type == 0) {
+    title = 'Resistor';
+    label = 'Resistance';
+    unit = 'Ω';
+  }
+  else if (object.type == 1) {
+    title = 'Voltage Source';
+    label = 'Voltage';
+    unit = 'V';
+  }
+  else {
+    title = 'Current Source';
+    label = 'Current';
+    unit = 'A';
+  }
+
+  return Container(
+    width: 280,
+
+    padding: const EdgeInsets.all(16),
+
+    decoration: BoxDecoration(
+      color: const Color(0xFF252525),
+
+      borderRadius: BorderRadius.circular(12),
+
+      border: Border.all(
+        color: Colors.white24,
+      ),
+
+      boxShadow: const [
+        BoxShadow(
+          blurRadius: 15,
+          spreadRadius: 2,
+          color: Colors.black54,
+        ),
+      ],
+    ),
+
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+
+      children: [
+
+        // =========================
+        // HEADER
+        // =========================
+
+        Row(
+          mainAxisAlignment:
+              MainAxisAlignment.spaceBetween,
+
+          children: [
+
+            Text(
+              'Edit $title',
+
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            IconButton(
+              onPressed: () {
+                showEditPanel.value = false;
+              },
+
+              icon: const Icon(
+                Icons.close,
+                color: Colors.white70,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        // =========================
+        // VALUE
+        // =========================
+
+        Text(
+          label,
+
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        Row(
+          children: [
+
+            Expanded(
+              child: TextField(
+                controller: editValueController,
+
+                keyboardType:
+                    const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+
+                  contentPadding:
+                      EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            Text(
+              unit,
+
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 15),
+
+        // =========================
+        // SAVE
+        // =========================
+
+        SizedBox(
+          width: double.infinity,
+
+          child: ElevatedButton(
+            onPressed: () {
+
+              final double? value =
+                  double.tryParse(
+                editValueController.text,
+              );
+
+              if (value == null) {
+                return;
+              }
+
+              // Update selected component
+
+              if (object.type == 0) {
+                object.resistance = value;
+              }
+              else if (object.type == 1) {
+                object.voltage = value;
+              }
+              else {
+                object.current = value;
+              }
+
+              // Repaint canvas
+
+              objectsNotifier.value = [
+                ...objectsNotifier.value,
+              ];
+
+              // Close editor
+
+              showEditPanel.value = false;
+            },
+
+            
+
+            child: const Text(
+              'SAVE',
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+void selectTerminal(Offset position) {
+
+  connectionStartObject = null;
+  connectionStartTerminal = null;
+
+  for (final object in objectsNotifier.value.reversed) {
+
+    final terminal =
+        object.getTerminalAt(position);
+
+    if (terminal != null) {
+
+      connectionStartObject = object;
+      connectionStartTerminal = terminal;
+
+      print(
+        'Terminal selected: '
+        '${object.name} - Terminal $terminal',
+      );
+
+      return;
+    }
+  }
+}
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Column(
       children:[
         Expanded(
@@ -255,29 +563,90 @@ Offset getTopCenterOfCanvas() {
                     child: ValueListenableBuilder<bool>(
                       valueListenable: isRotating, 
                       builder: (context,rotating, _) {  
-                        return IconButton(
-                        onPressed:  (){
-                          if (rotating) return;
-
-                           rotateSelectedObject();
-                        },
-                      
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                      
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      
-                        icon: const Icon(
-                          Icons.rotate_right,
-                        ),
-                      );
+                        return Column(
+                          children: [
+                            IconButton(
+                            onPressed:  (){
+                              if (rotating) return;
+                             editSelectedObject();
+                            },
+                                                  
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                                                  
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                                                  
+                            icon: const Icon(
+                              Icons.edit,
+                            ),
+                                                  ),
+                            IconButton(
+                            onPressed:  (){
+                              if (rotating) return;
+                            
+                               rotateSelectedObject();
+                            },
+                                                  
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                                                  
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                                                  
+                            icon: const Icon(
+                              Icons.rotate_right,
+                            ),
+                                                  ),
+                                                  IconButton(
+                            onPressed:  (){
+                              if (rotating) return;
+                            
+                               deleteSelectedObject();
+                            },
+                                                  
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                                                  
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                                                  
+                            icon: const Icon(
+                              Icons.delete,
+                            ),
+                                                  )
+                          
+                          ],
+                        );
                       }, 
                     )
                   ),
+                  ValueListenableBuilder<bool>(
+  valueListenable: showEditPanel,
+  builder: (context, show, _) {
+
+    if (!show || selectedObject == null) {
+      return const SizedBox();
+    }
+
+    return Positioned(
+      top:100,
+      left: (screenWidth - 280) / 2,
+      right: 20,
+
+      child: _buildEditPanel(),
+    );
+  },
+),
                   ]
               );
             }
@@ -290,6 +659,7 @@ Offset getTopCenterOfCanvas() {
               ElevatedButton(
             onPressed: () {
               addObject(Component(x: 100, y: 100, type:0));
+              
             },
             child: const Text('Resistor'),
           ),
