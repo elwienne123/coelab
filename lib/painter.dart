@@ -1,10 +1,18 @@
 import 'package:coelab/component.dart';
 import 'package:flutter/material.dart';
+import 'package:coelab/connection.dart';
 
 class MyCanvasPainter extends CustomPainter {
   final List<Component> objects;
   final Component? selectedObject;
-  MyCanvasPainter(this.objects, this.selectedObject);
+  
+    final Component? connectionStartObject;
+  final int? connectionStartTerminal;
+  final Offset? connectionDragPosition;
+  final List<Connection> connections;
+  MyCanvasPainter(this.objects, this.selectedObject, this.connections,this.connectionStartObject,
+    this.connectionStartTerminal,
+    this.connectionDragPosition,);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -28,7 +36,54 @@ class MyCanvasPainter extends CustomPainter {
         );
       }
     }
+  // ============================================================
+// PERMANENT CONNECTIONS
+// ============================================================
 
+final connectionPaint = Paint()
+  ..color = Colors.white.withAlpha(200)
+  ..strokeWidth = 3
+  ..style = PaintingStyle.stroke
+  ..strokeCap = StrokeCap.round;
+
+for (final connection in connections) {
+
+  final startPosition =
+      connection.startObject
+          .getWorldTerminalPosition(
+            connection.startTerminal,
+          );
+
+  final endPosition =
+      connection.endObject
+          .getWorldTerminalPosition(
+            connection.endTerminal,
+          );
+
+  final path = Path();
+
+path.moveTo(
+  startPosition.dx,
+  startPosition.dy,
+);
+
+// Horizontal first
+path.lineTo(
+  endPosition.dx,
+  startPosition.dy,
+);
+
+// Then vertical
+path.lineTo(
+  endPosition.dx,
+  endPosition.dy,
+);
+
+canvas.drawPath(
+  path,
+  connectionPaint,
+);
+}
     // Draw your components after the dots
     for (final object in objects) {
        canvas.save();
@@ -82,8 +137,57 @@ class MyCanvasPainter extends CustomPainter {
   canvas,
   object,
 );
+
     canvas.restore();
+    
     }
+    // ============================================================
+// TEMPORARY CONNECTION WIRE
+// ============================================================
+
+if (connectionStartObject != null &&
+    connectionStartTerminal != null &&
+    connectionDragPosition != null) {
+
+  final startPosition =
+      connectionStartObject!
+          .getWorldTerminalPosition(
+            connectionStartTerminal!,
+          );
+
+  final endPosition = connectionDragPosition!;
+
+  final wirePaint = Paint()
+    ..color = Colors.white
+    ..strokeWidth = 3
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round;
+
+  final path = Path();
+
+  path.moveTo(
+    startPosition.dx,
+    startPosition.dy,
+  );
+
+  // Horizontal first
+  path.lineTo(
+    endPosition.dx,
+    startPosition.dy,
+  );
+
+  // Then vertical
+  path.lineTo(
+    endPosition.dx,
+    endPosition.dy,
+  );
+
+  canvas.drawPath(
+    path,
+    wirePaint,
+  );
+}
     
    
   }
@@ -660,6 +764,11 @@ void drawComponentLabel(
 
   @override
   bool shouldRepaint(covariant MyCanvasPainter oldDelegate) {
-    return oldDelegate.objects != objects;
+    return oldDelegate.objects != objects ||
+      oldDelegate.selectedObject != selectedObject ||
+      oldDelegate.connections != connections ||
+      oldDelegate.connectionStartObject != connectionStartObject ||
+      oldDelegate.connectionStartTerminal != connectionStartTerminal ||
+      oldDelegate.connectionDragPosition != connectionDragPosition;
   }
 }

@@ -98,7 +98,7 @@ Offset getWorldTerminalPosition(int terminalIndex) {
 
   int? getTerminalAt(
   Offset position, {
-  double radius = 15,
+  double radius = 25,
 }) {
 
   for (int i = 0; i < 2; i++) {
