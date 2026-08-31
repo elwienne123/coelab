@@ -130,20 +130,6 @@ Offset getWorldTerminalPosition(int terminalIndex) {
     return hitbox.contains(position);
   }
 
-  // ============================================================
-  // DRAW
-  // ============================================================
-
-  void draw(Canvas canvas) {
-
-    final paint = Paint()
-      ..color = Colors.blue;
-
-    canvas.drawCircle(
-      Offset(x, y),
-      20,
-      paint,
-    );
-  }
+ 
   
 }

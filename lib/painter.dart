@@ -5,14 +5,23 @@ import 'package:coelab/connection.dart';
 class MyCanvasPainter extends CustomPainter {
   final List<Component> objects;
   final Component? selectedObject;
-  
-    final Component? connectionStartObject;
-  final int? connectionStartTerminal;
-  final Offset? connectionDragPosition;
-  final List<Connection> connections;
-  MyCanvasPainter(this.objects, this.selectedObject, this.connections,this.connectionStartObject,
-    this.connectionStartTerminal,
-    this.connectionDragPosition,);
+  final ConnectionNode? selectedNode;
+final Component? connectionStartObject;
+final int? connectionStartTerminal;
+final Offset? connectionDragPosition;
+final List<ConnectionNode> nodes;
+final WireSegment? selectedSegment;
+
+MyCanvasPainter(
+  this.objects,
+  this.selectedObject,
+  this.nodes,
+  this.connectionStartObject,
+  this.connectionStartTerminal,
+  this.connectionDragPosition,
+  this.selectedNode,
+   this.selectedSegment,
+);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -36,54 +45,51 @@ class MyCanvasPainter extends CustomPainter {
         );
       }
     }
-  // ============================================================
-// PERMANENT CONNECTIONS
+ // ============================================================
+// PERMANENT WIRE NETWORKS
 // ============================================================
 
-final connectionPaint = Paint()
-  ..color = Colors.white.withAlpha(200)
-  ..strokeWidth = 3
-  ..style = PaintingStyle.stroke
-  ..strokeCap = StrokeCap.round;
+for (final node in nodes) {
+  for (final segment in node.segments) {
 
-for (final connection in connections) {
+    final startPosition = segment.start.getPosition();
+    final endPosition = segment.end.getPosition();
 
-  final startPosition =
-      connection.startObject
-          .getWorldTerminalPosition(
-            connection.startTerminal,
-          );
+    final wirePaint = Paint()
+      ..color = segment == selectedSegment
+    ? Colors.yellow
+    : Colors.white.withAlpha(200)
+..strokeWidth = segment == selectedSegment ? 5 : 3
+..style = PaintingStyle.stroke
+  ..strokeCap = StrokeCap.round
+  ..strokeJoin = StrokeJoin.round;
 
-  final endPosition =
-      connection.endObject
-          .getWorldTerminalPosition(
-            connection.endTerminal,
-          );
+    final path = Path();
 
-  final path = Path();
+    path.moveTo(
+      startPosition.dx,
+      startPosition.dy,
+    );
 
-path.moveTo(
-  startPosition.dx,
-  startPosition.dy,
-);
+    // Horizontal first
+    path.lineTo(
+      endPosition.dx,
+      startPosition.dy,
+    );
 
-// Horizontal first
-path.lineTo(
-  endPosition.dx,
-  startPosition.dy,
-);
+    // Vertical second
+    path.lineTo(
+      endPosition.dx,
+      endPosition.dy,
+    );
 
-// Then vertical
-path.lineTo(
-  endPosition.dx,
-  endPosition.dy,
-);
-
-canvas.drawPath(
-  path,
-  connectionPaint,
-);
+    canvas.drawPath(
+      path,
+      wirePaint,
+    );
+  }
 }
+
     // Draw your components after the dots
     for (final object in objects) {
        canvas.save();
@@ -766,9 +772,14 @@ void drawComponentLabel(
   bool shouldRepaint(covariant MyCanvasPainter oldDelegate) {
     return oldDelegate.objects != objects ||
       oldDelegate.selectedObject != selectedObject ||
-      oldDelegate.connections != connections ||
-      oldDelegate.connectionStartObject != connectionStartObject ||
-      oldDelegate.connectionStartTerminal != connectionStartTerminal ||
-      oldDelegate.connectionDragPosition != connectionDragPosition;
+      oldDelegate.nodes != nodes ||
+      oldDelegate.selectedNode != selectedNode ||
+      oldDelegate.selectedSegment != selectedSegment ||
+      oldDelegate.connectionStartObject !=
+          connectionStartObject ||
+      oldDelegate.connectionStartTerminal !=
+          connectionStartTerminal ||
+      oldDelegate.connectionDragPosition !=
+          connectionDragPosition;
   }
 }
