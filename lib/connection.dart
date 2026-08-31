@@ -13,6 +13,15 @@ class NodeTerminal {
 }
 
 // ============================================================
+// WIRE LEG
+// ============================================================
+
+enum WireLeg {
+  horizontal,
+  vertical,
+}
+
+// ============================================================
 // WIRE SEGMENT
 // ============================================================
 
@@ -41,62 +50,122 @@ class NodePoint {
   final int? terminal;
 
   final WireSegment? parentSegment;
+
+  /// Position from 0.0 to 1.0 along the selected wire leg.
   final double? position;
 
+  /// Which part of the parent's orthogonal wire was targeted.
+  final WireLeg? wireLeg;
+
   final Offset? fixedPosition;
+
+  // ============================================================
+  // COMPONENT POINT
+  // ============================================================
 
   NodePoint.component({
     required this.object,
     required this.terminal,
   })  : parentSegment = null,
         position = null,
+        wireLeg = null,
         fixedPosition = null;
+
+  // ============================================================
+  // WIRE POINT
+  // ============================================================
 
   NodePoint.onWire({
     required this.parentSegment,
     required this.position,
+    required this.wireLeg,
   })  : object = null,
         terminal = null,
         fixedPosition = null;
+
+  // ============================================================
+  // FIXED POINT
+  // ============================================================
 
   NodePoint.fixed({
     required this.fixedPosition,
   })  : object = null,
         terminal = null,
         parentSegment = null,
-        position = null;
+        position = null,
+        wireLeg = null;
 
   // ============================================================
   // POSITION
   // ============================================================
 
   Offset getPosition() {
-    // Component terminal
-    if (object != null && terminal != null) {
+    // ----------------------------------------------------------
+    // COMPONENT TERMINAL
+    // ----------------------------------------------------------
+
+    if (object != null &&
+        terminal != null) {
       return object!.getWorldTerminalPosition(
         terminal!,
       );
     }
 
-    // Point attached to an existing wire
-    if (parentSegment != null && position != null) {
+    // ----------------------------------------------------------
+    // POINT ATTACHED TO AN ORTHOGONAL WIRE
+    // ----------------------------------------------------------
+
+    if (parentSegment != null &&
+        position != null &&
+        wireLeg != null) {
+
       final start =
           parentSegment!.start.getPosition();
 
       final end =
           parentSegment!.end.getPosition();
 
+      // Your painter currently draws:
+      //
+      // start ─────────────┐
+      //                    │
+      //                    end
+      //
+      // Therefore the corner is:
+      final corner = Offset(
+        end.dx,
+        start.dy,
+      );
+
+      // --------------------------------------------------------
+      // HORIZONTAL LEG
+      // --------------------------------------------------------
+
+      if (wireLeg == WireLeg.horizontal) {
+        return Offset(
+          start.dx +
+              (corner.dx - start.dx) *
+                  position!,
+          start.dy,
+        );
+      }
+
+      // --------------------------------------------------------
+      // VERTICAL LEG
+      // --------------------------------------------------------
+
       return Offset(
-        start.dx +
-            (end.dx - start.dx) *
-                position!,
-        start.dy +
-            (end.dy - start.dy) *
+        corner.dx,
+        corner.dy +
+            (end.dy - corner.dy) *
                 position!,
       );
     }
 
-    // Fixed point
+    // ----------------------------------------------------------
+    // FIXED POINT
+    // ----------------------------------------------------------
+
     return fixedPosition!;
   }
 }
@@ -116,7 +185,7 @@ class NodePoint {
 ///         R3
 ///
 /// R1, R2 and R3 terminals connected to that
-/// continuous wire belong to the SAME ConnectionNode.
+/// continuous conductor belong to the same ConnectionNode.
 class ConnectionNode {
   final List<NodeTerminal> terminals = [];
 

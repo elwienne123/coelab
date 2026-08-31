@@ -221,99 +221,84 @@ class _HomeState extends State<Home>
   // ============================================================
 
   ({
-    ConnectionNode node,
-    WireSegment segment,
-    double position,
-  })? findWireAtPosition(
-    Offset position,
-  ) {
+  ConnectionNode node,
+  WireSegment segment,
+  double position,
+  WireLeg wireLeg,
+})? findWireAtPosition(
+  Offset position,
+) {
+  const double hitTolerance = 25.0;
 
-    const double hitTolerance = 25.0;
+  for (final node in nodesNotifier.value.reversed) {
+    for (final segment in node.segments) {
+      final start = segment.start.getPosition();
+      final end = segment.end.getPosition();
 
-    for (final node
-        in nodesNotifier.value.reversed) {
+      // ========================================================
+      // HORIZONTAL PART
+      // ========================================================
 
-      for (final segment
-          in node.segments) {
+      final horizontalEnd = Offset(
+        end.dx,
+        start.dy,
+      );
 
-        final start =
-            segment.start.getPosition();
+      final horizontalDistance = distanceToSegment(
+        position,
+        start,
+        horizontalEnd,
+      );
 
-        final end =
-            segment.end.getPosition();
-
-        // ======================================================
-        // HORIZONTAL PART
-        // ======================================================
-
-        final horizontalEnd =
-            Offset(
-          end.dx,
-          start.dy,
-        );
-
-        final horizontalDistance =
-            distanceToSegment(
+      if (horizontalDistance <= hitTolerance) {
+        final segmentPosition = getPositionOnSegment(
           position,
           start,
           horizontalEnd,
         );
 
-        if (horizontalDistance <=
-            hitTolerance) {
-
-          final segmentPosition =
-              getPositionOnSegment(
-            position,
-            start,
-            horizontalEnd,
-          );
-
-          return (
-            node: node,
-            segment: segment,
-            position: segmentPosition,
-          );
-        }
-
-        // ======================================================
-        // VERTICAL PART
-        // ======================================================
-
-        final verticalStart =
-            Offset(
-          end.dx,
-          start.dy,
+        return (
+          node: node,
+          segment: segment,
+          position: segmentPosition,
+          wireLeg: WireLeg.horizontal,
         );
+      }
 
-        final verticalDistance =
-            distanceToSegment(
+      // ========================================================
+      // VERTICAL PART
+      // ========================================================
+
+      final verticalStart = Offset(
+        end.dx,
+        start.dy,
+      );
+
+      final verticalDistance = distanceToSegment(
+        position,
+        verticalStart,
+        end,
+      );
+
+      if (verticalDistance <= hitTolerance) {
+        final segmentPosition = getPositionOnSegment(
           position,
           verticalStart,
           end,
         );
 
-        if (verticalDistance <=
-            hitTolerance) {
-
-          final segmentPosition =
-              getPositionOnSegment(
-            position,
-            verticalStart,
-            end,
-          );
-
-          return (
-            node: node,
-            segment: segment,
-            position: segmentPosition,
-          );
-        }
+        return (
+          node: node,
+          segment: segment,
+          position: segmentPosition,
+          wireLeg: WireLeg.vertical,
+        );
       }
     }
-
-    return null;
   }
+
+  return null;
+}
 
   // ============================================================
   // FIND NODE AT WIRE
@@ -421,7 +406,11 @@ print('********************************');
   final targetNode = result.node;
   final targetSegment = result.segment;
   final position = result.position;
-
+  print(
+  'ATTACHMENT: '
+  '${result.wireLeg} '
+  'position=${position.toStringAsFixed(3)}',
+);
   // ============================================================
   // DON'T CONNECT A COMPONENT TO ITS OWN DIRECT WIRE
   // ============================================================
@@ -463,21 +452,22 @@ print('********************************');
   // ============================================================
 
   final wirePoint = NodePoint.onWire(
-    parentSegment: targetSegment,
-    position: position,
-  );
+  parentSegment: targetSegment,
+  position: position,
+  wireLeg: result.wireLeg,
+);
 
   // ============================================================
   // CREATE THE NEW BRANCH
   // ============================================================
 
   final branch = WireSegment(
-    start: wirePoint,
-    end: NodePoint.component(
-      object: object,
-      terminal: terminal,
-    ),
-  );
+  start: NodePoint.component(
+    object: object,
+    terminal: terminal,
+  ),
+  end: wirePoint,
+);
 
   // ============================================================
   // CASE 1:
