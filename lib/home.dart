@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:coelab/component.dart';
 import 'package:coelab/painter.dart';
 import 'package:coelab/connection.dart';
+import 'package:coelab/history.dart';
+import 'package:coelab/history_manager.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -12,7 +14,149 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home>
     with SingleTickerProviderStateMixin {
+final HistoryManager historyManager = HistoryManager();
+CircuitSnapshot captureCurrentState() {
+  return CircuitSnapshot.capture(
+    objectsNotifier.value,
+    nodesNotifier.value,
+  );
+}
+Widget _buildComponentButton({
+ 
+  required String label,
+  required VoidCallback onPressed,
+}) {
+  return Material(
+    color: Colors.transparent,
 
+    child: InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(10),
+
+      child: Container(
+        height: 42,
+
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+        ),
+
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(
+            255,
+            40,
+            40,
+            40,
+          ),
+
+          borderRadius:
+              BorderRadius.circular(10),
+
+          border: Border.all(
+            color: Colors.white12,
+          ),
+        ),
+
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+
+            Icon(
+              Icons.add,
+              size: 19,
+              color: const Color.fromARGB(
+                255,
+                120,
+                175,
+                225,
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color.fromARGB(
+                  255,
+                  200,
+                  200,
+                  200,
+                ),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+void undo() {
+  final currentState = captureCurrentState();
+
+  final previousState =
+      historyManager.undo(currentState);
+
+  if (previousState == null) {
+    return;
+  }
+
+  final restored = previousState.restore();
+
+  objectsNotifier.value = restored.objects;
+  nodesNotifier.value = restored.nodes;
+
+  selectedObject = null;
+  selectedNode = null;
+  selectedSegment = null;
+
+  connectionStartObject = null;
+  connectionStartTerminal = null;
+  connectionDragPosition = null;
+
+  isConnecting.value = false;
+  valueListenable.value = true;
+
+  objectsNotifier.value =
+      List.from(objectsNotifier.value);
+
+  nodesNotifier.value =
+      List.from(nodesNotifier.value);
+}
+
+void redo() {
+  final currentState = captureCurrentState();
+
+  final nextState =
+      historyManager.redo(currentState);
+
+  if (nextState == null) {
+    return;
+  }
+
+  final restored = nextState.restore();
+
+  objectsNotifier.value = restored.objects;
+  nodesNotifier.value = restored.nodes;
+
+  selectedObject = null;
+  selectedNode = null;
+  selectedSegment = null;
+
+  connectionStartObject = null;
+  connectionStartTerminal = null;
+  connectionDragPosition = null;
+
+  isConnecting.value = false;
+  valueListenable.value = true;
+
+  objectsNotifier.value =
+      List.from(objectsNotifier.value);
+
+  nodesNotifier.value =
+      List.from(nodesNotifier.value);
+}
   // ============================================================
   // CONTROLLERS
   // ============================================================
@@ -74,6 +218,7 @@ class _HomeState extends State<Home>
   // ============================================================
 
   Offset? lastPointerPosition;
+  bool hasMovedSelectedObject = false;
 
   // ============================================================
   // CONSTANTS
@@ -93,6 +238,8 @@ class _HomeState extends State<Home>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
+     // Initial empty circuit state
+  
   }
 
   // ============================================================
@@ -446,7 +593,7 @@ print('********************************');
     );
     return;
   }
-
+historyManager.save(captureCurrentState());
   // ============================================================
   // CREATE A POINT ON THE TARGET WIRE
   // ============================================================
@@ -549,6 +696,8 @@ void createConnection(
   Component endObject,
   int endTerminal,
 ) {
+
+   historyManager.save(captureCurrentState());
   // ============================================================
   // DON'T CONNECT COMPONENT TO ITSELF
   // ============================================================
@@ -765,7 +914,10 @@ print('****************************');
   // ============================================================
 
   void addObject(Component object) {
-
+    // Save the circuit BEFORE making the change.
+  historyManager.save(
+    captureCurrentState(),
+  );
     final position =
         getTopCenterOfCanvas();
 
@@ -905,7 +1057,7 @@ print('****************************');
   if (selectedSegment == null) {
     return;
   }
-
+ historyManager.save(captureCurrentState());
   final segmentToDelete =
       selectedSegment!;
 
@@ -1053,7 +1205,7 @@ print('****************************');
     if (selectedObject == null) {
       return;
     }
-
+ historyManager.save(captureCurrentState());
     final objectToDelete =
         selectedObject!;
 
@@ -1095,7 +1247,7 @@ print('****************************');
         isRotating.value) {
       return;
     }
-
+historyManager.save(captureCurrentState());
     isRotating.value = true;
 
     final double startRotation =
@@ -1412,7 +1564,7 @@ print('****************************');
                 if (value == null) {
                   return;
                 }
-
+  historyManager.save(captureCurrentState());
                 if (object.type == 0) {
 
                   object.resistance =
@@ -1463,7 +1615,202 @@ print('****************************');
 
     return Column(
       children: [
+        Container(
+  height: 70,
+  padding: const EdgeInsets.symmetric(
+    horizontal: 12,
+  ),
+  decoration: BoxDecoration(
+    border: const Border(
+      bottom: BorderSide(
+        color: Colors.white12,
+        width: 1,
+      ),
+    ),
+    color: const Color.fromARGB(
+      255,
+      30,
+      30,
+      30,
+    ),
+    boxShadow: const [
+      BoxShadow(
+        color: Colors.black54,
+        blurRadius: 6,
+        offset: Offset(0, 2),
+      ),
+    ],
+  ),
+  child: Row(
+    children: [
 
+      // =====================================================
+      // COELAB TITLE
+      // =====================================================
+
+      const Text(
+        'COELAB',
+        style: TextStyle(
+          color:  Color.fromARGB(
+                            255,
+                            215,
+                            215,
+                            215,
+                          ),
+          fontSize: 19,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
+      ),
+
+      const Spacer(),
+
+      // =====================================================
+      // UNDO / REDO GROUP
+      // =====================================================
+
+      Container(
+        height: 40,
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(
+            255,
+            40,
+            40,
+            40,
+          ),
+          borderRadius:
+              BorderRadius.circular(10),
+          border: Border.all(
+            color: Colors.white12,
+          ),
+        ),
+        child: ListenableBuilder(
+          listenable: historyManager,
+          builder: (context, child) {
+            return Row(
+              children: [
+
+                IconButton(
+                  tooltip: 'Undo',
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
+                  onPressed: historyManager.canUndo
+                      ? undo
+                      : null,
+                  icon: Icon(
+                    Icons.undo_rounded,
+                    size: 21,
+                    color: historyManager.canUndo
+                        ? const Color.fromARGB(
+                            255,
+                            215,
+                            215,
+                            215,
+                          )
+                        : const Color.fromARGB(
+                            255,
+                            90,
+                            90,
+                            90,
+                          ),
+                  ),
+                ),
+
+                Container(
+                  width: 1,
+                  height: 22,
+                  color: Colors.white12,
+                ),
+
+                IconButton(
+                  tooltip: 'Redo',
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
+                  onPressed: historyManager.canRedo
+                      ? redo
+                      : null,
+                  icon: Icon(
+                    Icons.redo_rounded,
+                    size: 21,
+                    color: historyManager.canRedo
+                        ? const Color.fromARGB(
+                            255,
+                            215,
+                            215,
+                            215,
+                          )
+                        : const Color.fromARGB(
+                            255,
+                            90,
+                            90,
+                            90,
+                          ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+
+      const SizedBox(width: 10),
+
+      // =====================================================
+      // DIVIDER
+      // =====================================================
+
+      Container(
+        width: 1,
+        height: 28,
+        color: Colors.white12,
+      ),
+
+      const SizedBox(width: 10),
+
+      // =====================================================
+      // RUN BUTTON
+      // =====================================================
+
+      Container(
+        height: 40,
+        width: 40,
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(
+            255,
+            38,
+            48,
+            58,
+          ),
+          borderRadius:
+              BorderRadius.circular(10),
+          border: Border.all(
+            color: const Color.fromARGB(
+              255,
+              65,
+              105,
+              140,
+            ),
+          ),
+        ),
+        child: IconButton(
+          tooltip: 'Run',
+          padding: EdgeInsets.zero,
+          onPressed: () {},
+          icon: const Icon(
+            Icons.play_arrow_rounded,
+            size: 22,
+          ),
+          color: const Color.fromARGB(
+            255,
+            120,
+            175,
+            225,
+          ),
+        ),
+      ),
+    ],
+  ),
+),
         // ======================================================
         // CANVAS
         // ======================================================
@@ -1542,129 +1889,92 @@ print('****************************');
                             // POINTER DOWN
                             // ==================================================
 
-                            onPointerDown:
-                                (event) {
+                            onPointerDown: (event) {
+  final scenePosition =
+      event.localPosition;
 
-                              final scenePosition =
-                                  event
-                                      .localPosition;
+ 
 
-                              // ==============================================
-                              // CHECK TERMINAL FIRST
-                              // ==============================================
+  // ==========================================================
+  // CHECK COMPONENT
+  // ==========================================================
 
-                              checkTerminal(
-                                scenePosition,
-                              );
+  selectObject(
+    scenePosition,
+  );
 
-                              if (isConnecting
-                                  .value) {
+  if (selectedObject != null) {
+    selectedSegment = null;
+    selectedNode = null;
 
-                                selectedObject =
-                                    null;
+    lastPointerPosition =
+        scenePosition;
 
-                                selectedSegment =
-                                    null;
+    return;
+  }
+ // ==========================================================
+  // CHECK WIRE FIRST
+  // ==========================================================
 
-                                selectedNode =
-                                    null;
+  final wireResult =
+      findWireAtPosition(
+    scenePosition,
+  );
 
-                                lastPointerPosition =
-                                    null;
+  if (wireResult != null) {
+    selectedObject = null;
+    selectedSegment =
+        wireResult.segment;
+    selectedNode =
+        wireResult.node;
 
-                                return;
-                              }
+    showEditPanel.value = false;
+    valueListenable.value = false;
 
-                              // ==============================================
-                              // CHECK COMPONENT
-                              // ==============================================
+    lastPointerPosition = null;
 
-                              selectObject(
-                                scenePosition,
-                              );
+    print(
+      'Selected wire segment',
+    );
 
-                              if (selectedObject !=
-                                  null) {
+    objectsNotifier.value = [
+      ...objectsNotifier.value,
+    ];
 
-                                selectedSegment =
-                                    null;
+    return;
+  }
 
-                                selectedNode =
-                                    null;
+  // ==========================================================
+  // CHECK TERMINAL
+  // ==========================================================
 
-                                lastPointerPosition =
-                                    scenePosition;
+  checkTerminal(
+    scenePosition,
+  );
 
-                                return;
-                              }
+  if (isConnecting.value) {
+    selectedObject = null;
+    selectedSegment = null;
+    selectedNode = null;
+    lastPointerPosition = null;
 
-                              // ==============================================
-                              // CHECK WIRE
-                              // ==============================================
+    return;
+  }
+  // ==========================================================
+  // EMPTY CANVAS
+  // ==========================================================
 
-                              final wireResult =
-                                  findWireAtPosition(
-                                scenePosition,
-                              );
+  selectedObject = null;
+  selectedSegment = null;
+  selectedNode = null;
+  lastPointerPosition = null;
 
-                              if (wireResult !=
-                                  null) {
+  valueListenable.value = true;
 
-                                selectedObject =
-                                    null;
-
-                                selectedSegment =
-                                    wireResult
-                                        .segment;
-
-                                selectedNode =
-                                    wireResult.node;
-
-                                showEditPanel
-                                    .value =
-                                    false;
-
-                                valueListenable
-                                    .value =
-                                    false;
-
-                                lastPointerPosition =
-                                    null;
-
-                                print(
-                                  'Selected wire segment',
-                                );
-
-                              } else {
-
-                                // ==========================================
-                                // EMPTY CANVAS
-                                // ==========================================
-
-                                selectedObject =
-                                    null;
-
-                                selectedSegment =
-                                    null;
-
-                                selectedNode =
-                                    null;
-
-                                lastPointerPosition =
-                                    null;
-
-                                valueListenable
-                                    .value =
-                                    true;
-                              }
-
-                              // Trigger repaint.
-                              objectsNotifier
-                                  .value = [
-                                ...objectsNotifier
-                                    .value,
-                              ];
-                            },
+  objectsNotifier.value = [
+    ...objectsNotifier.value,
+  ];
+},
 
                             // ==================================================
                             // POINTER MOVE
@@ -1700,13 +2010,14 @@ print('****************************');
                               // COMPONENT DRAG
                               // ==============================================
 
-                              if (selectedObject !=
-                                  null) {
+                              if (selectedObject != null) {
+  if (!hasMovedSelectedObject) {
+    historyManager.save(captureCurrentState());
+    hasMovedSelectedObject = true;
+  }
 
-                                moveSelectedObject(
-                                  scenePosition,
-                                );
-                              }
+  moveSelectedObject(scenePosition);
+}
                             },
 
                             // ==================================================
@@ -1720,87 +2031,65 @@ print('****************************');
                                   event
                                       .localPosition;
 
-                              // ==============================================
                               // CONNECTION RELEASE
-                              // ==============================================
+if (isConnecting.value) {
+  final startObject =
+      connectionStartObject;
 
-                              if (isConnecting
-                                  .value) {
+  final startTerminal =
+      connectionStartTerminal;
 
-                                final targetTerminal =
-                                    findTerminal(
-                                  scenePosition,
-                                );
+  if (startObject != null &&
+      startTerminal != null) {
 
-                                final startObject =
-                                    connectionStartObject;
+    // ----------------------------------------------------------
+    // FIRST: CHECK IF POINTER IS ON A WIRE
+    // ----------------------------------------------------------
 
-                                final startTerminal =
-                                    connectionStartTerminal;
+    final wireResult =
+        findWireAtPosition(scenePosition);
 
-                                // --------------------------------------------
-                                // CONNECT TO TERMINAL
-                                // --------------------------------------------
+    // ----------------------------------------------------------
+    // SECOND: CHECK IF POINTER IS ON A TERMINAL
+    // ----------------------------------------------------------
 
-                                if (startObject !=
-                                        null &&
-                                    startTerminal !=
-                                        null &&
-                                    targetTerminal !=
-                                        null) {
+    final targetTerminal =
+        findTerminal(scenePosition);
 
-                                  createConnection(
-                                    startObject,
-                                    startTerminal,
-                                    targetTerminal
-                                        .object,
-                                    targetTerminal
-                                        .terminal,
-                                  );
-                                }
+    // ----------------------------------------------------------
+    // PRIORITIZE WIRE
+    // ----------------------------------------------------------
 
-                                // --------------------------------------------
-                                // CONNECT TO WIRE
-                                // --------------------------------------------
+    if (wireResult != null) {
 
-                                else if (
-                                    startObject !=
-                                        null &&
-                                    startTerminal !=
-                                        null) {
+      connectTerminalToWire(
+        startObject,
+        startTerminal,
+        scenePosition,
+      );
 
-                                  connectTerminalToWire(
-                                    startObject,
-                                    startTerminal,
-                                    scenePosition,
-                                  );
-                                }
+    } else if (targetTerminal != null) {
 
-                                // --------------------------------------------
-                                // RESET
-                                // --------------------------------------------
+      createConnection(
+        startObject,
+        startTerminal,
+        targetTerminal.object,
+        targetTerminal.terminal,
+      );
+    }
+  }
 
-                                connectionStartObject =
-                                    null;
+  connectionStartObject = null;
+  connectionStartTerminal = null;
+  connectionDragPosition = null;
+  isConnecting.value = false;
 
-                                connectionStartTerminal =
-                                    null;
+  nodesNotifier.value = [
+    ...nodesNotifier.value,
+  ];
 
-                                connectionDragPosition =
-                                    null;
-
-                                isConnecting
-                                    .value =
-                                    false;
-
-                                nodesNotifier
-                                    .value = [
-                                  ...nodesNotifier
-                                      .value,
-                                ];
-
-                                return;
-                              }
+  return;
+}
 
                               // ==============================================
                               // COMPONENT RELEASE
@@ -1830,6 +2119,9 @@ print('****************************');
 
                                 lastPointerPosition =
                                     null;
+
+                                    hasMovedSelectedObject = false;
+lastPointerPosition = null;
                               }
                             },
 
@@ -1990,7 +2282,7 @@ print('****************************');
                                   null)
 
                                 const SizedBox(
-                                  height: 8,
+                                  height: 0.5,
                                 ),
 
                               // ==============================================
@@ -2036,7 +2328,7 @@ print('****************************');
                                 ),
 
                               const SizedBox(
-                                height: 8,
+                                height:0.5,
                               ),
 
                               // ==============================================
@@ -2150,80 +2442,72 @@ print('****************************');
         // ==============================================================
 
         SingleChildScrollView(
-          scrollDirection:
-              Axis.horizontal,
+  scrollDirection: Axis.horizontal,
+  padding: const EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 8,
+  ),
 
-          child: Row(
-            children: [
+  child: Row(
+    children: [
 
-              // ==========================================================
-              // RESISTOR
-              // ==========================================================
+      // ==========================================================
+      // RESISTOR
+      // ==========================================================
 
-              ElevatedButton(
-                onPressed: () {
+      _buildComponentButton(
+        label: 'Resistor',
+        onPressed: () {
+          addObject(
+            Component(
+              x: 100,
+              y: 100,
+              type: 0,
+            ),
+          );
+        },
+      ),
 
-                  addObject(
-                    Component(
-                      x: 100,
-                      y: 100,
-                      type: 0,
-                    ),
-                  );
-                },
+      const SizedBox(width: 8),
 
-                child:
-                    const Text(
-                  'Resistor',
-                ),
-              ),
+      // ==========================================================
+      // VOLTAGE SOURCE
+      // ==========================================================
 
-              // ==========================================================
-              // VOLTAGE SOURCE
-              // ==========================================================
+      _buildComponentButton(
+        label: 'Voltage Source',
+        onPressed: () {
+          addObject(
+            Component(
+              x: 100,
+              y: 100,
+              type: 1,
+            ),
+          );
+        },
+      ),
 
-              ElevatedButton(
-                onPressed: () {
+      const SizedBox(width: 8),
 
-                  addObject(
-                    Component(
-                      x: 100,
-                      y: 100,
-                      type: 1,
-                    ),
-                  );
-                },
+      // ==========================================================
+      // CURRENT SOURCE
+      // ==========================================================
 
-                child:
-                    const Text(
-                  'Voltage Source',
-                ),
-              ),
-
-              // ==========================================================
-              // CURRENT SOURCE
-              // ==========================================================
-
-              ElevatedButton(
-                onPressed: () {
-
-                  addObject(
-                    Component(
-                      x: 100,
-                      y: 100,
-                      type: 2,
-                    ),
-                  );
-                },
-
-                child:
-                    const Text(
-                  'Current Source',
-                ),
-              ),
-            ],
-          ),
-        ),
+      _buildComponentButton(
+        label: 'Current Source',
+        onPressed: () {
+          addObject(
+            Component(
+              x: 100,
+              y: 100,
+              type: 2,
+            ),
+          );
+        },
+      ),
+    ],
+  ),
+),
       ],
     );
   }

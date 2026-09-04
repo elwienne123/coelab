@@ -1,6 +1,7 @@
 import 'package:coelab/home.dart';
 import 'package:flutter/material.dart';
 
+
 void main() {
   runApp(const MyApp());
 }
@@ -52,12 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        elevation: 4.0,     
-         shadowColor: const Color.fromARGB(255, 17,17,17), 
-        backgroundColor: const Color.fromARGB(255, 30,30,30),
-        title: Text(widget.title,style: const TextStyle(color: Color.fromARGB(255, 215, 215, 215), fontWeight: FontWeight.bold,fontSize: 20),),
-      ),
+      backgroundColor: Colors.white12,
       body: SafeArea(child: Home()),
       
     );

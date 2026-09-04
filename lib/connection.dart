@@ -5,7 +5,7 @@ import 'package:coelab/component.dart';
 class NodeTerminal {
   final Component object;
   final int terminal;
-
+  
   NodeTerminal({
     required this.object,
     required this.terminal,
@@ -188,9 +188,8 @@ class NodePoint {
 /// continuous conductor belong to the same ConnectionNode.
 class ConnectionNode {
   final List<NodeTerminal> terminals = [];
-
   final List<WireSegment> segments = [];
-
+   ConnectionNode.empty();
   ConnectionNode({
     required NodeTerminal start,
     required NodeTerminal end,
