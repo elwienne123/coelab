@@ -187,6 +187,7 @@ class NodePoint {
 /// R1, R2 and R3 terminals connected to that
 /// continuous conductor belong to the same ConnectionNode.
 class ConnectionNode {
+  Component? wire;
   final List<NodeTerminal> terminals = [];
   final List<WireSegment> segments = [];
    ConnectionNode.empty();

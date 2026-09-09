@@ -7,6 +7,9 @@ class Component {
   double x;
   double y;
   double rotation;
+   List<Component?> compAtTerminal = [null, null];
+  List<Component> children = [];
+ 
 
   String name;
 
