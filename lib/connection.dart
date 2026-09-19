@@ -1,11 +1,12 @@
 
+import 'package:coelab/run.dart';
 import 'package:flutter/material.dart';
 import 'package:coelab/component.dart';
 
 class NodeTerminal {
   final Component object;
   final int terminal;
-  
+  ConnectionNode? head,tail;
   NodeTerminal({
     required this.object,
     required this.terminal,
@@ -28,7 +29,7 @@ enum WireLeg {
 class WireSegment {
   final NodePoint start;
   final NodePoint end;
-
+  
   WireSegment({
     required this.start,
     required this.end,
@@ -187,13 +188,14 @@ class NodePoint {
 /// R1, R2 and R3 terminals connected to that
 /// continuous conductor belong to the same ConnectionNode.
 class ConnectionNode {
-  Component? wire;
+  final List<Branch> branches=[];
   final List<NodeTerminal> terminals = [];
   final List<WireSegment> segments = [];
    ConnectionNode.empty();
   ConnectionNode({
     required NodeTerminal start,
     required NodeTerminal end,
+   
   }) {
     terminals.add(start);
     terminals.add(end);

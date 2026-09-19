@@ -1,5 +1,6 @@
 
 import 'dart:math' as math;
+import 'package:coelab/connection.dart';
 import 'package:flutter/material.dart';
 
 class Component {
@@ -9,7 +10,7 @@ class Component {
   double rotation;
    List<Component?> compAtTerminal = [null, null];
   List<Component> children = [];
- 
+  ConnectionNode? start,end;
 
   String name;
 

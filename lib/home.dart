@@ -473,6 +473,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     final targetNode = result.node;
     final targetSegment = result.segment;
     final position = result.position;
+
+   
     /**
      * print(
       'ATTACHMENT: '
@@ -531,7 +533,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       start: NodePoint.component(object: object, terminal: terminal),
       end: wirePoint,
     );
-
+   
     // ============================================================
     // CASE 1:
     // TERMINAL IS NOT CONNECTED TO ANY NODE
@@ -542,16 +544,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     if (sourceNode == null) {
       targetNode.addBranch(segment: branch, object: object, terminal: terminal);
       printNodeState('AFTER ADDING TERMINAL TO WIRE');
-      
       nodesNotifier.value = [...nodesNotifier.value];
-      
-      
-     /**
-      *  print(
+      objectsNotifier.value = [...objectsNotifier.value];
+    print(
         'Added ${object.name}-T$terminal '
         'to existing wire/node.',
       );
-      */
+      
 
       return;
     }
@@ -566,6 +565,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     targetNode.addBranch(segment: branch, object: object, terminal: terminal);
 
     targetNode.mergeWith(sourceNode);
+    
+    
     /**
      * print('Merged source node into target node.');
      */
@@ -575,7 +576,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     nodesNotifier.value = nodesNotifier.value
         .where((node) => node != sourceNode)
         .toList();
-
+    
     // Trigger repaint.
     nodesNotifier.value = [...nodesNotifier.value];
 
@@ -637,29 +638,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         end: NodeTerminal(object: endObject, terminal: endTerminal),
       );
 
-      Component wire= Component(x: 0, y: 0, type: 3);
       
-      for(Component comp in objectsNotifier.value){
-        if(comp.name==startObject.name){
-          comp.compAtTerminal[startTerminal]=wire;
-           wire.children.add(comp);
-           break;
-        }
-       
-      }
-      for(Component comp in objectsNotifier.value){
-        if(comp.name==endObject.name){
-          comp.compAtTerminal[endTerminal]=wire;
-          wire.children.add(comp);
-           break;
-        }
-       
-      }
+      
+     
+        
      
 
-      
-      addObject(wire);
-      newNode.wire=wire;
       nodesNotifier.value = [...nodesNotifier.value, newNode];
       printNodeState('AFTER CREATING NEW NODE');
       /**
@@ -806,7 +790,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     final snappedX = (position.dx / gridSize).round() * gridSize;
 
     final snappedY = (position.dy / gridSize).round() * gridSize;
+if (object.type == 3) {
+    object.x = snappedX;
+    object.y = snappedY;
 
+    objectsNotifier.value = [
+      ...objectsNotifier.value,
+      object,
+    ];
+
+    return;
+  }
     final newObject = Component(
       x: snappedX,
       y: snappedY,
@@ -917,7 +911,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     for (final node in nodesNotifier.value) {
       if (node.segments.contains(segmentToDelete)) {
         node.removeSegment(segmentToDelete);
-
         break;
       }
     }
@@ -1466,7 +1459,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 return;
                               }
                               // ==========================================================
-                              // CHECK WIRE FIRST
+                              // CHECK WIRE 
                               // ==========================================================
 
                               final wireResult = findWireAtPosition(
@@ -1476,15 +1469,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                               if (wireResult != null) {
                                 selectedObject = null;
                                 selectedSegment = wireResult.segment;
+
                                 selectedNode = wireResult.node;
 
                                 showEditPanel.value = false;
                                 valueListenable.value = false;
 
                                 lastPointerPosition = null;
-
-                                print('Selected wire segment');
-
                                 objectsNotifier.value = [
                                   ...objectsNotifier.value,
                                 ];
@@ -1596,6 +1587,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                       startTerminal,
                                       scenePosition,
                                     );
+                                  
                                     
                                   } else if (targetTerminal != null) {
                                     createConnection(

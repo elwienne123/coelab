@@ -132,7 +132,7 @@ for (final node in nodes) {
     // ============================================================
 
     for (final object in objects) {
-    if(object.type!=3){
+   
      canvas.save();
       final center = Offset(
         object.x + 50,
@@ -218,7 +218,7 @@ for (final node in nodes) {
       );
 
       canvas.restore();
-    }
+    
     }
 
     // ============================================================
