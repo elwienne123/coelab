@@ -30,7 +30,7 @@ class Run{
    
   setValues();
   for(ConnectionNode node in junctions){
-    //node.branches.clear();
+    
     print('branches connected to node ${junctions.indexOf(node)}');
     print('branches: ${node.branches.length}');
     for(Branch branch in node.branches){
@@ -41,7 +41,7 @@ class Run{
     }
     
   }
-    
+    nodalAnalysis();
   }
   bool isVisited(NodeTerminal node){
     for(NodeTerminal terminal in visited){
@@ -114,6 +114,38 @@ class Run{
         }
     }
   }
+  
+  void nodalAnalysis(){
+    for(ConnectionNode node in junctions){
+      if(junctions.indexOf(node)<junctions.length-1){
+        print(junctions.length);
+          for(int i=0; i<junctions.length; i++){
+            
+            node.eqn.add(0);
+          }
+      }
+      
+    }
+    for(ConnectionNode node in junctions){
+     if(junctions.indexOf(node)<junctions.length-1){
+      // node.branches.clear();
+      //node.eqn.clear();
+      for(Branch branch in node.branches){
+          int multiplier=(branch.head==node)?-1:1;
+         node.eqn[junctions.indexOf(branch.head!)]+=multiplier/branch.totalResistence;
+         if(junctions.indexOf(branch.tail!)<junctions.length-1){
+        node.eqn[junctions.indexOf(branch.tail!)]+=multiplier*-1/branch.totalResistence;
+         }
+         if(branch.totalVoltage!=0){
+            node.eqn[node.eqn.length-1]=branch.totalVoltage*-1*multiplier;
+         }
+      }
+      print(node.eqn);
+     }
+    }
+  }
+
+
 }
 
 class Branch{

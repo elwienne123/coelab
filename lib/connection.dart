@@ -189,6 +189,7 @@ class NodePoint {
 /// continuous conductor belong to the same ConnectionNode.
 class ConnectionNode {
   final List<Branch> branches=[];
+  final List<double> eqn=[];
   final List<NodeTerminal> terminals = [];
   final List<WireSegment> segments = [];
    ConnectionNode.empty();
