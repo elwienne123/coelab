@@ -5,6 +5,7 @@ import 'package:coelab/painter.dart';
 import 'package:coelab/connection.dart';
 import 'package:coelab/history.dart';
 import 'package:coelab/history_manager.dart';
+import 'package:coelab/shared/BannerAdWidget.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -46,19 +47,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.add,
-                size: 19,
+              if(label=="More")
+                Icon(
+                Icons.keyboard_double_arrow_up_rounded,
+                size: 20,
                 color: const Color.fromARGB(255, 120, 175, 225),
               ),
+              
 
-              const SizedBox(width: 8),
+              const SizedBox(width: 2),
 
               Text(
                 label,
                 style: const TextStyle(
                   color: Color.fromARGB(255, 200, 200, 200),
-                  fontSize: 14,
+                  fontSize: 10,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1829,7 +1832,7 @@ if (object.type == 3) {
             },
           ),
         ),
-
+       
         // ==============================================================
         // COMPONENT BUTTONS
         // ==============================================================
@@ -1839,6 +1842,14 @@ if (object.type == 3) {
 
           child: Row(
             children: [
+               _buildComponentButton(
+                label: 'More',
+                onPressed: () {
+                  
+                },
+              ),
+
+              const SizedBox(width: 8),
               // ==========================================================
               // RESISTOR
               // ==========================================================
@@ -1855,7 +1866,7 @@ if (object.type == 3) {
               // VOLTAGE SOURCE
               // ==========================================================
               _buildComponentButton(
-                label: 'Voltage Source',
+                label: 'DC-Voltage',
                 onPressed: () {
                   addObject(Component(x: 100, y: 100, type: 1));
                 },
@@ -1867,7 +1878,7 @@ if (object.type == 3) {
               // CURRENT SOURCE
               // ==========================================================
               _buildComponentButton(
-                label: 'Current Source',
+                label: 'Current src',
                 onPressed: () {
                   addObject(Component(x: 100, y: 100, type: 2));
                 },
@@ -1875,6 +1886,13 @@ if (object.type == 3) {
             ],
           ),
         ),
+        SizedBox(height: 8,),
+        Container(
+                height: 55,
+                width: double.maxFinite,
+                color: Colors.grey.shade900,
+                child: const Banneradwidget(),
+              )
       ],
     );
   }
