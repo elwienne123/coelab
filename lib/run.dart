@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:coelab/component.dart';
 import 'package:coelab/connection.dart';
 
@@ -8,14 +10,26 @@ class Run{
     final List<ConnectionNode> junctions =[];
     final List<NodeTerminal> visited =[];
     final List<NodeTerminal> branch =[];
+    final List<List<double>> eqn=[];
   Run(List<Component> objects, List<ConnectionNode> nodes){
+    for(int i=0; i<eqn.length; i++){
+        print(eqn[i]);
+    }
+   
+    
     this.objects.addAll(objects);
     this.nodes.addAll(nodes);
+     
+     for(ConnectionNode node in nodes){
+        node.branches.clear();
+        node.eqn.clear();
+     }
     for (final node in nodes) {
       if (node.terminals.length >= 3) {
         junctions.add(node);
       }
     }
+    
     for(ConnectionNode node in junctions){
        for(NodeTerminal terminal in node.terminals){
         if(isVisited(terminal)==false){
@@ -29,9 +43,38 @@ class Run{
 
    
   setValues();
-  for(ConnectionNode node in junctions){
-    
-    print('branches connected to node ${junctions.indexOf(node)}');
+ 
+      
+    nodalAnalysis();
+    print("/////////");
+    for(int k=0; k<eqn.length; k++){
+            print(eqn[k] );
+   }
+
+   for (int i = 0; i < eqn.length; i++) {
+
+  double pivot = eqn[i][i];
+
+  for (int k = 0; k < eqn[i].length; k++) {
+    eqn[i][k] /= pivot;
+  }
+
+  for (int j = i + 1; j < eqn.length; j++) {
+
+    double factor = eqn[j][i];
+
+    for (int k = 0; k < eqn[j].length; k++) {
+      eqn[j][k] -= factor * eqn[i][k];
+    }
+  }
+}
+    print("=========");
+    for(int k=0; k<eqn.length; k++){
+            print(eqn[k] );
+   }
+     for(ConnectionNode node in junctions){
+      if(junctions.indexOf(node)<eqn.length){
+        print('branches connected to node ${junctions.indexOf(node)}');
     print('branches: ${node.branches.length}');
     for(Branch branch in node.branches){
         print('Branch ${node.branches.indexOf(branch)} r: ${branch.totalResistence} v: ${branch.totalVoltage} c: ${branch.totalCurrent}');
@@ -39,10 +82,13 @@ class Run{
             print('T-${terminal.terminal} - ${terminal.object.name}');
           }
     }
-    
+      }
+      
+      
   }
-    nodalAnalysis();
   }
+
+  
   bool isVisited(NodeTerminal node){
     for(NodeTerminal terminal in visited){
       if(node.object==terminal.object){
@@ -72,7 +118,6 @@ class Run{
             NodeTerminal newTerminal=NodeTerminal(object: b.object, terminal: b.terminal);
             newBranch.add(newTerminal);
            }
-            print("tail");
             Branch branchWire=new Branch(branch: newBranch);
             
               branchWire.head=origin;
@@ -103,9 +148,9 @@ class Run{
                 }else{
                     if(branch.totalCurrent==0){
                         if(terminal.terminal==0){
-                          branch.totalCurrent-=terminal.object.current;
-                        }else{
                           branch.totalCurrent+=terminal.object.current;
+                        }else{
+                          branch.totalCurrent-=terminal.object.current;
                         }
                     }
                 }
@@ -117,7 +162,7 @@ class Run{
   
   void nodalAnalysis(){
     for(ConnectionNode node in junctions){
-      if(junctions.indexOf(node)<junctions.length-1){
+      if(junctions.indexOf(node)<junctions.length){
         print(junctions.length);
           for(int i=0; i<junctions.length; i++){
             
@@ -128,21 +173,30 @@ class Run{
     }
     for(ConnectionNode node in junctions){
      if(junctions.indexOf(node)<junctions.length-1){
-      // node.branches.clear();
-      //node.eqn.clear();
       for(Branch branch in node.branches){
           int multiplier=(branch.head==node)?-1:1;
-         node.eqn[junctions.indexOf(branch.head!)]+=multiplier/branch.totalResistence;
-         if(junctions.indexOf(branch.tail!)<junctions.length-1){
-        node.eqn[junctions.indexOf(branch.tail!)]+=multiplier*-1/branch.totalResistence;
-         }
-         if(branch.totalVoltage!=0){
-            node.eqn[node.eqn.length-1]=branch.totalVoltage*-1*multiplier;
-         }
+          if(branch.totalCurrent!=0){
+             node.eqn[node.eqn.length-1]=branch.totalCurrent*-1*multiplier;
+            
+          }else{
+                node.eqn[junctions.indexOf(branch.head!)]+=multiplier/branch.totalResistence;
+                if(junctions.indexOf(branch.tail!)<junctions.length-1){
+                node.eqn[junctions.indexOf(branch.tail!)]-=multiplier/branch.totalResistence;
+                }
+                if(branch.totalVoltage!=0){
+                    node.eqn[node.eqn.length-1]=branch.totalVoltage/branch.totalResistence*-1*multiplier;
+                }
+          }
+          
       }
-      print(node.eqn);
+
+      eqn.add(node.eqn);
      }
+     
     }
+     
+    
+    
   }
 
 

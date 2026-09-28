@@ -1833,66 +1833,83 @@ if (object.type == 3) {
           ),
         ),
        
-        // ==============================================================
-        // COMPONENT BUTTONS
-        // ==============================================================
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-
-          child: Row(
-            children: [
-               _buildComponentButton(
-                label: 'More',
-                onPressed: () {
-                  
-                },
-              ),
-
-              const SizedBox(width: 8),
-              // ==========================================================
-              // RESISTOR
-              // ==========================================================
-              _buildComponentButton(
-                label: 'Resistor',
-                onPressed: () {
-                  addObject(Component(x: 100, y: 100, type: 0));
-                },
-              ),
-
-              const SizedBox(width: 8),
-
-              // ==========================================================
-              // VOLTAGE SOURCE
-              // ==========================================================
-              _buildComponentButton(
-                label: 'DC-Voltage',
-                onPressed: () {
-                  addObject(Component(x: 100, y: 100, type: 1));
-                },
-              ),
-
-              const SizedBox(width: 8),
-
-              // ==========================================================
-              // CURRENT SOURCE
-              // ==========================================================
-              _buildComponentButton(
-                label: 'Current src',
-                onPressed: () {
-                  addObject(Component(x: 100, y: 100, type: 2));
-                },
-              ),
-            ],
+        Container(
+          color: const Color(0xFF252525),
+          width: screenWidth,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                 _buildComponentButton(
+                  label: 'More',
+                  onPressed: () {
+                      showModalBottomSheet(context: context, builder: (BuildContext conetext){
+                        return  Container(
+                height: 200,
+                color: const Color(0xFF252525),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: .center,
+                    mainAxisSize: .min,
+                    children: <Widget>[
+                      const Text('Available Soon!', style: TextStyle(color: Colors.white60),),
+                
+                    ],
+                  ),
+                ),
+              );
+                      });
+                  },
+                ),
+          
+                const SizedBox(width: 8),
+                // ==========================================================
+                // RESISTOR
+                // ==========================================================
+                _buildComponentButton(
+                  label: 'Resistor',
+                  onPressed: () {
+                    addObject(Component(x: 100, y: 100, type: 0));
+                  },
+                ),
+          
+                const SizedBox(width: 8),
+          
+                // ==========================================================
+                // VOLTAGE SOURCE
+                // ==========================================================
+                _buildComponentButton(
+                  label: 'DC-Voltage',
+                  onPressed: () {
+                    addObject(Component(x: 100, y: 100, type: 1));
+                  },
+                ),
+          
+                const SizedBox(width: 8),
+          
+                // ==========================================================
+                // CURRENT SOURCE
+                // ==========================================================
+                _buildComponentButton(
+                  label: 'Current src',
+                  onPressed: () {
+                    addObject(Component(x: 100, y: 100, type: 2));
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         SizedBox(height: 8,),
-        Container(
+       /**
+        *  Container(
                 height: 55,
                 width: double.maxFinite,
                 color: Colors.grey.shade900,
                 child: const Banneradwidget(),
               )
+        */
       ],
     );
   }
