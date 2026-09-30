@@ -1,3 +1,4 @@
+import 'package:coelab/msg.dart';
 import 'package:coelab/run.dart';
 import 'package:flutter/material.dart';
 import 'package:coelab/component.dart';
@@ -6,6 +7,8 @@ import 'package:coelab/connection.dart';
 import 'package:coelab/history.dart';
 import 'package:coelab/history_manager.dart';
 import 'package:coelab/shared/BannerAdWidget.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -1399,6 +1402,7 @@ if (object.type == 3) {
                   color: const Color.fromARGB(255, 120, 175, 225),
                 ),
               ),
+             
             ],
           ),
         ),
@@ -1422,168 +1426,168 @@ if (object.type == 3) {
                     builder: (context, connecting, _) {
                       return InteractiveViewer(
                         constrained: false,
-
+                      
                         minScale: 0.5,
-
+                      
                         maxScale: 4.0,
-
+                      
                         scaleEnabled: value && !connecting,
-
+                      
                         panEnabled: value && !connecting,
-
+                      
                         transformationController: transformationController,
-
+                      
                         child: Container(
                           color: const Color.fromARGB(255, 30, 30, 30),
-
+                      
                           width: 900,
-
+                      
                           height: 1273,
-
+                      
                           child: Listener(
                             // ==================================================
                             // POINTER DOWN
                             // ==================================================
                             onPointerDown: (event) {
                               final scenePosition = event.localPosition;
-
+                      
                               // ==========================================================
                               // CHECK COMPONENT
                               // ==========================================================
-
+                      
                               selectObject(scenePosition);
-
+                      
                               if (selectedObject != null) {
                                 selectedSegment = null;
                                 selectedNode = null;
-
+                      
                                 lastPointerPosition = scenePosition;
-
+                      
                                 return;
                               }
                               // ==========================================================
                               // CHECK WIRE 
                               // ==========================================================
-
+                      
                               final wireResult = findWireAtPosition(
                                 scenePosition,
                               );
-
+                      
                               if (wireResult != null) {
                                 selectedObject = null;
                                 selectedSegment = wireResult.segment;
-
+                      
                                 selectedNode = wireResult.node;
-
+                      
                                 showEditPanel.value = false;
                                 valueListenable.value = false;
-
+                      
                                 lastPointerPosition = null;
                                 objectsNotifier.value = [
                                   ...objectsNotifier.value,
                                 ];
-
+                      
                                 return;
                               }
-
+                      
                               // ==========================================================
                               // CHECK TERMINAL
                               // ==========================================================
-
+                      
                               checkTerminal(scenePosition);
-
+                      
                               if (isConnecting.value) {
                                 selectedObject = null;
                                 selectedSegment = null;
                                 selectedNode = null;
                                 lastPointerPosition = null;
-
+                      
                                 return;
                               }
                               // ==========================================================
                               // EMPTY CANVAS
                               // ==========================================================
-
+                      
                               selectedObject = null;
                               selectedSegment = null;
                               selectedNode = null;
                               lastPointerPosition = null;
-
+                      
                               valueListenable.value = true;
-
+                      
                               objectsNotifier.value = [
                                 ...objectsNotifier.value,
                               ];
                             },
-
+                      
                             // ==================================================
                             // POINTER MOVE
                             // ==================================================
                             onPointerMove: (event) {
                               final scenePosition = event.localPosition;
-
+                      
                               // ==============================================
                               // CONNECTION DRAG
                               // ==============================================
-
+                      
                               if (isConnecting.value) {
                                 connectionDragPosition = scenePosition;
-
+                      
                                 objectsNotifier.value = [
                                   ...objectsNotifier.value,
                                 ];
-
+                      
                                 return;
                               }
-
+                      
                               // ==============================================
                               // COMPONENT DRAG
                               // ==============================================
-
+                      
                               if (selectedObject != null) {
                                 if (!hasMovedSelectedObject) {
                                   historyManager.save(captureCurrentState());
                                   hasMovedSelectedObject = true;
                                 }
-
+                      
                                 moveSelectedObject(scenePosition);
                               }
                             },
-
+                      
                             // ==================================================
                             // POINTER UP
                             // ==================================================
                             onPointerUp: (event) {
                               final scenePosition = event.localPosition;
-
+                      
                               // CONNECTION RELEASE
                               if (isConnecting.value) {
                                 final startObject = connectionStartObject;
-
+                      
                                 final startTerminal = connectionStartTerminal;
-
+                      
                                 if (startObject != null &&
                                     startTerminal != null) {
                                   // ----------------------------------------------------------
                                   // FIRST: CHECK IF POINTER IS ON A WIRE
                                   // ----------------------------------------------------------
-
+                      
                                   final wireResult = findWireAtPosition(
                                     scenePosition,
                                   );
-
+                      
                                   // ----------------------------------------------------------
                                   // SECOND: CHECK IF POINTER IS ON A TERMINAL
                                   // ----------------------------------------------------------
-
+                      
                                   final targetTerminal = findTerminal(
                                     scenePosition,
                                   );
-
+                      
                                   // ----------------------------------------------------------
                                   // PRIORITIZE WIRE
                                   // ----------------------------------------------------------
-
+                      
                                   if (wireResult != null) {
                                     connectTerminalToWire(
                                       startObject,
@@ -1601,74 +1605,74 @@ if (object.type == 3) {
                                     );
                                   }
                                 }
-
+                      
                                 connectionStartObject = null;
                                 connectionStartTerminal = null;
                                 connectionDragPosition = null;
                                 isConnecting.value = false;
-
+                      
                                 nodesNotifier.value = [...nodesNotifier.value];
-
+                      
                                 return;
                               }
-
+                      
                               // ==============================================
                               // COMPONENT RELEASE
                               // ==============================================
-
+                      
                               if (selectedObject != null) {
                                 final snappedPosition = getSnappedPosition(
                                   selectedObject!,
                                 );
-
+                      
                                 selectedObject!.x = snappedPosition.dx;
-
+                      
                                 selectedObject!.y = snappedPosition.dy;
-
+                      
                                 objectsNotifier.value = [
                                   ...objectsNotifier.value,
                                 ];
-
+                      
                                 lastPointerPosition = null;
-
+                      
                                 hasMovedSelectedObject = false;
                                 lastPointerPosition = null;
                               }
                             },
-
+                      
                             // ==================================================
                             // POINTER CANCEL
                             // ==================================================
                             onPointerCancel: (event) {
                               selectedObject = null;
-
+                      
                               selectedSegment = null;
-
+                      
                               selectedNode = null;
-
+                      
                               lastPointerPosition = null;
-
+                      
                               connectionStartObject = null;
-
+                      
                               connectionStartTerminal = null;
-
+                      
                               connectionDragPosition = null;
-
+                      
                               isConnecting.value = false;
                             },
-
+                      
                             // ==================================================
                             // PAINTER
                             // ==================================================
                             child: ValueListenableBuilder<List<Component>>(
                               valueListenable: objectsNotifier,
-
+                      
                               builder: (context, objects, _) {
                                 return ValueListenableBuilder<
                                   List<ConnectionNode>
                                 >(
                                   valueListenable: nodesNotifier,
-
+                      
                                   builder: (context, nodes, _) {
                                     return CustomPaint(
                                       painter: MyCanvasPainter(
@@ -1706,6 +1710,7 @@ if (object.type == 3) {
                         builder: (context, rotating, _) {
                           return Column(
                             children: [
+                            
                               // ==============================================
                               // EDIT COMPONENT
                               // ==============================================
@@ -1827,6 +1832,115 @@ if (object.type == 3) {
                       );
                     },
                   ),
+
+                  Positioned(
+                    bottom: 20,
+                    right: 20,
+                    child: InkWell(child: 
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical:10, horizontal:15),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 38, 48, 58),
+                        border: Border.all(
+                    color: const Color.fromARGB(255, 65, 105, 140),
+                  ),
+                        borderRadius: BorderRadius.all(Radius.circular(100)),
+                      ),
+                      
+                      child: Row(
+                        children: [
+                          Text("Circuit Agent", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: const Color.fromARGB(255, 120, 175, 225),),),
+                          SizedBox(width: 5,),
+                          Icon(Icons.settings_suggest_sharp,color: const Color.fromARGB(255, 120, 175, 225), size: 22,)
+                        ],
+                      )),
+                      onTap: (){
+                        showModalBottomSheet(context: context,
+                       builder: (BuildContext conetext){
+                        
+                          return  Container(
+                          decoration: BoxDecoration(
+                            color: const Color.fromRGBO(43,43,43, 1),
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(6))
+                          ),
+                          
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: .spaceBetween,
+                              crossAxisAlignment: .start,
+                              children: <Widget>[
+                                Container(
+                                  padding: EdgeInsets.symmetric(vertical: 10,horizontal: 10),
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromARGB(255, 38, 48, 58),
+                                    borderRadius: BorderRadius.vertical(top:Radius.circular(6)),
+                                    border: Border.all(
+                                                color: const Color.fromARGB(255, 65, 105, 140),
+                                              )
+                                  ),
+                                 
+                                    
+                                    child: Row(
+                                      children: [
+                                        Text("Circuit Agent",style: TextStyle(fontSize: 12, color: const Color.fromARGB(255, 120, 175, 225), fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),),
+                                         ],
+                                    ),
+                                    
+                                  
+                                  
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment: .start,
+                                      children: [
+                                        Message(msg: "Hi! I'm CALIS. 👋",isHeading:true),
+                                        Message(msg: "I'll walk you through how this circuit is solved, step by step.",isHeading:false),
+                                        Message(msg: "\nStep 1 — Identify all the nodes",isHeading: true,),
+                                        Message(msg: "There are two unknown node voltages:",isHeading: false,),
+                                        SizedBox(height: 10,),
+                                        Math.tex( r' V_{a}',textStyle: TextStyle(color: Colors.white),),
+                                        SizedBox(height: 10,),
+                                        Math.tex( r' V_{b}',textStyle: TextStyle(color: Colors.white),),
+                                        Message(msg: "\nStep 2 — Apply KCL at Va",isHeading: true,),
+                                        Message(msg: "The sum of currents leaving node Va must equal the current entering it.",isHeading: false,), 
+                                        SizedBox(height: 10,),
+                                        Math.tex( r' I = \frac{V}{R}',textStyle: TextStyle(color: Colors.white),),
+                                      ],
+                                                                      ),
+                                    )),
+                                ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                    
+                                   // Apply the gradient here
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,     // Where the gradient starts
+                                      end: Alignment.topCenter,   // Where the gradient ends
+                                      colors: [
+                                        const Color.fromARGB(255, 38, 48, 58),                // First color
+                                        const Color.fromARGB(0, 38, 48, 58), 
+                                                    // Second color
+                                      ],
+                                    ),// Optional rounded corners
+                                  ),
+                                    width: double.maxFinite,
+                                    height: 100,
+                                    child: Center(
+                                      child: LoadingAnimationWidget.waveDots(color: const Color.fromARGB(255, 120, 175, 225), size: 28),
+                                    ),
+                                  )
+
+                                                      
+                              ],
+                            ),
+                          ),
+                        );
+                                });
+                                },
+                      )),
                 ],
               );
             },
@@ -1844,7 +1958,10 @@ if (object.type == 3) {
                  _buildComponentButton(
                   label: 'More',
                   onPressed: () {
-                      showModalBottomSheet(context: context, builder: (BuildContext conetext){
+                      showModalBottomSheet(context: context,
+                      
+                       builder: (BuildContext conetext){
+                        
                         return  Container(
                 height: 200,
                 color: const Color(0xFF252525),

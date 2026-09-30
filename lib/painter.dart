@@ -55,79 +55,6 @@ class MyCanvasPainter extends CustomPainter {
     }
 
     // ============================================================
-    // PERMANENT WIRE NETWORKS
-    // ============================================================
-
-    for (final node in nodes) {
-      for (final segment in node.segments) {
-        final startPosition =
-            segment.start.getPosition();
-
-        final endPosition =
-            segment.end.getPosition();
-
-        final wirePaint = Paint()
-          ..color = segment == selectedSegment
-              ? Colors.yellow
-              : Colors.white.withAlpha(200)
-          ..strokeWidth =
-              segment == selectedSegment ? 5 : 3
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round;
-
-        drawWire(
-          canvas,
-          startPosition,
-          endPosition,
-          wirePaint,
-        );
-      }
-    }
-// ============================================================
-// JUNCTION POINTS
-// ============================================================
-
-final drawnJunctions = <Offset>[];
-
-for (final node in nodes) {
-  for (final segment in node.segments) {
-    final points = [
-      segment.start,
-      segment.end,
-    ];
-
-    for (final point in points) {
-      // A NodePoint with a parentSegment is
-      // an attachment point on an existing wire.
-      if (point.parentSegment != null &&
-          point.position != null) {
-        final junctionPosition =
-            point.getPosition();
-
-        // Prevent drawing the same junction twice.
-        final alreadyDrawn =
-            drawnJunctions.any(
-          (existing) =>
-              (existing - junctionPosition).distance <
-              0.1,
-        );
-
-        if (!alreadyDrawn) {
-          drawJunction(
-            canvas,
-            junctionPosition,
-          );
-
-          drawnJunctions.add(
-            junctionPosition,
-          );
-        }
-      }
-    }
-  }
-}
-    // ============================================================
     // COMPONENTS
     // ============================================================
 
@@ -208,6 +135,8 @@ for (final node in nodes) {
         );
       }
 
+
+
       // ==========================================================
       // COMPONENT LABEL
       // ==========================================================
@@ -220,6 +149,81 @@ for (final node in nodes) {
       canvas.restore();
     
     }
+    // ============================================================
+    // PERMANENT WIRE NETWORKS
+    // ============================================================
+
+    for (final node in nodes) {
+      for (final segment in node.segments) {
+        final startPosition =
+            segment.start.getPosition();
+
+        final endPosition =
+            segment.end.getPosition();
+
+        final wirePaint = Paint()
+          ..color = segment == selectedSegment
+              ? Colors.yellow
+              : Colors.white.withAlpha(200)
+          ..strokeWidth =
+              segment == selectedSegment ? 5 : 3
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round;
+
+        drawWire(
+          canvas,
+          startPosition,
+          endPosition,
+          wirePaint,
+        );
+      }
+    }
+
+    
+// ============================================================
+// JUNCTION POINTS
+// ============================================================
+
+final drawnJunctions = <Offset>[];
+
+for (final node in nodes) {
+  for (final segment in node.segments) {
+    final points = [
+      segment.start,
+      segment.end,
+    ];
+
+    for (final point in points) {
+      // A NodePoint with a parentSegment is
+      // an attachment point on an existing wire.
+      if (point.parentSegment != null &&
+          point.position != null) {
+        final junctionPosition =
+            point.getPosition();
+
+        // Prevent drawing the same junction twice.
+        final alreadyDrawn =
+            drawnJunctions.any(
+          (existing) =>
+              (existing - junctionPosition).distance <
+              0.1,
+        );
+
+        if (!alreadyDrawn) {
+          drawJunction(
+            canvas,
+            junctionPosition,
+          );
+
+          drawnJunctions.add(
+            junctionPosition,
+          );
+        }
+      }
+    }
+  }
+}
 
     // ============================================================
     // TEMPORARY CONNECTION WIRE
@@ -228,7 +232,7 @@ for (final node in nodes) {
     if (connectionStartObject != null &&
         connectionStartTerminal != null &&
         connectionDragPosition != null) {
-      final startPosition =
+      final startPosition = 
           connectionStartObject!
               .getWorldTerminalPosition(
         connectionStartTerminal!,
